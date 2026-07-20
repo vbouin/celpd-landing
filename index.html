@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>CELPD — Club des Entreprises Lyon Part-Dieu</title>
+
+<!-- ============================================================ -->
+<!--  CELPD LANDING · WIX-EMBED v5                                 -->
+<!--  Couleur principale : #16A0AF                                 -->
+<!--  Logo Wix : https://static.wixstatic.com/media/...            -->
+<!--  Carte interactive Part-Dieu + pulse réseau au hover          -->
+<!-- ============================================================ -->
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@500;600;700&display=swap" rel="stylesheet" />
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink:    { 900:'#0B1220', 800:'#111A2E', 700:'#1B2540', 500:'#3B4B6B', 300:'#94A3B8' },
+          paper:  { 50:'#FAFAF7', 100:'#F4F2EC' },
+          brand:  { 50:'#E5F6F8', 100:'#C2EAEE', 300:'#5BBEC8', 500:'#16A0AF', 600:'#10818D', 700:'#0C606A', 900:'#053B41' }
+        },
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          serif: ['Fraunces', 'ui-serif', 'Georgia']
+        },
+        boxShadow: {
+          card: '0 1px 0 0 rgba(11,18,32,0.04), 0 8px 24px -12px rgba(11,18,32,0.18)',
+          ring: '0 0 0 1px rgba(11,18,32,0.06)'
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { margin:0; padding:0; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust:100%; }
+  body { font-family: 'Inter', system-ui, sans-serif; background:#FAFAF7; color:#0B1220; overflow-x:hidden; }
+  .display { font-family: 'Fraunces', serif; letter-spacing:-0.02em; }
+  .chip { display:inline-flex; align-items:center; padding:.35rem .7rem; border-radius:999px; background:#E5F6F8; color:#0C606A; font-size:.7rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
+  .field { width:100%; padding:.7rem .9rem; border:1px solid rgba(11,18,32,.12); border-radius:.75rem; background:#FAFAF7; font-size:.95rem; min-height:44px; box-sizing:border-box; }
+  .field:focus { outline:none; border-color:#16A0AF; box-shadow:0 0 0 3px rgba(22,160,175,.18); }
+  .label { display:block; font-size:.75rem; font-weight:600; color:#1B2540; margin-bottom:.35rem; letter-spacing:.02em; }
+  .reveal { opacity:0; transform:translateY(16px); transition: all .6s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity:1; transform:none; }
+
+  /* ====== BACKGROUND ANIMATION (minimal floating dots) ====== */
+  .ambient { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .ambient::before, .ambient::after {
+    content:""; position:absolute; border-radius:50%; opacity:.18;
+    background: radial-gradient(circle, #16A0AF 0%, transparent 70%);
+    filter:blur(4px);
+  }
+  .ambient::before { width:520px; height:520px; top:-120px; left:-180px; animation: drift 26s ease-in-out infinite; }
+  .ambient::after  { width:380px; height:380px; bottom:-100px; right:-120px; animation: drift 32s ease-in-out infinite reverse; }
+  @keyframes drift {
+    0%   { transform: translate(0,0) scale(1); }
+    50%  { transform: translate(60px,40px) scale(1.08); }
+    100% { transform: translate(0,0) scale(1); }
+  }
+
+  /* ====== MAP ====== */
+  .map-wrap {
+    position:relative; aspect-ratio: 16 / 11;
+    background: linear-gradient(135deg,#E5F6F8 0%, #C2EAEE 100%);
+    border-radius: 1.25rem; overflow:hidden;
+    border:1px solid rgba(22,160,175,.18);
+  }
+  .map-wrap svg { display:block; width:100%; height:100%; }
+
+  /* Streets */
+  .street { stroke:#FAFAF7; stroke-linecap:round; }
+  .street-major { stroke-width:8; }
+  .street-medium { stroke-width:4; }
+  .street-minor { stroke-width:2; opacity:.7; }
+
+  /* Pulse ring on markers */
+  @keyframes pulse-ring {
+    0%   { r:6; opacity:.7; }
+    80%  { r:30; opacity:0; }
+    100% { r:30; opacity:0; }
+  }
+  .marker-pulse { fill:#16A0AF; opacity:0; }
+  .marker.on .marker-pulse {
+    animation: pulse-ring 1.6s ease-out infinite;
+    opacity:1;
+  }
+  .marker .dot { fill:#0C606A; transition: fill .25s, r .25s; }
+  .marker.on .dot { fill:#16A0AF; r:7; }
+  .marker .label-bg { fill:#FAFAF7; opacity:0; transition: opacity .25s; }
+  .marker .label-text { fill:#0B1220; opacity:0; font-size:11px; font-weight:600; transition: opacity .25s; }
+  .marker.on .label-bg { opacity:.95; }
+  .marker.on .label-text { opacity:1; }
+  .marker { cursor:pointer; }
+
+  /* Connecting lines visible on hover */
+  .link { stroke:#16A0AF; stroke-width:1.2; opacity:0; transition: opacity .3s; stroke-dasharray:3 4; }
+  .link.on { opacity:.55; }
+
+  /* Member list */
+  .member-row {
+    display:flex; align-items:center; gap:.6rem;
+    padding:.55rem .7rem; border-radius:.65rem;
+    border:1px solid transparent; cursor:pointer;
+    transition: all .2s; font-size:.78rem; font-weight:600; color:#0C606A;
+    background:#FAFAF7;
+  }
+  .member-row .dot {
+    width:7px; height:7px; border-radius:50%;
+    background:#5BBEC8; flex-shrink:0;
+    transition: all .25s;
+  }
+  .member-row[data-tier="1300"] .dot { background:#053B41; }
+  .member-row[data-tier="700"]  .dot { background:#0C606A; }
+  .member-row[data-tier="500"]  .dot { background:#10818D; }
+  .member-row[data-tier="300"]  .dot { background:#16A0AF; }
+  .member-row[data-tier="180"]  .dot { background:#5BBEC8; }
+  .member-row[data-tier="0"]    .dot { background:transparent; border:1px dashed #5BBEC8; }
+  .member-row:hover, .member-row.on {
+    background: #16A0AF; color:#fff; border-color:#16A0AF;
+    transform: translateX(2px);
+  }
+  .member-row:hover .dot, .member-row.on .dot { background:#fff; transform: scale(1.5); }
+
+  @media (max-width: 640px) { .display { letter-spacing: -.015em; } }
+  @media (prefers-reduced-motion: reduce) {
+    .marker.on .marker-pulse, .ambient::before, .ambient::after { animation:none; }
+  }
+</style>
+</head>
+
+<body class="antialiased">
+
+<!-- ===================================================== -->
+<!-- HERO                                                  -->
+<!-- ===================================================== -->
+<section class="relative overflow-hidden">
+  <div class="ambient"></div>
+  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10 pt-10 sm:pt-14 lg:pt-16 pb-16 sm:pb-20 lg:pb-28">
+
+    <!-- Logo CELPD (Wix Media) -->
+    <div class="flex items-center gap-3 mb-8 sm:mb-10">
+      <img src="https://static.wixstatic.com/media/474b60_1198fcb9d862445caaf9398c23a80c1b~mv2.png"
+           alt="CELPD — Club des Entreprises Lyon Part-Dieu"
+           class="h-14 sm:h-16 w-auto"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+      <span class="hidden items-center gap-2 font-semibold text-ink-900">
+        <span class="w-10 h-10 rounded-lg bg-brand-500 grid place-items-center text-white text-base font-bold">C</span>
+        <span class="text-sm tracking-wide">CELPD</span>
+      </span>
+    </div>
+
+    <span class="chip">Club des Entreprises Lyon Part-Dieu</span>
+    <h1 class="display mt-5 sm:mt-6 text-[2.5rem] sm:text-5xl md:text-7xl font-semibold leading-[1.02] sm:leading-[0.95] max-w-4xl">
+      Au service de
+      <span class="italic text-brand-500">l'avenir de la Part-Dieu.</span>
+    </h1>
+    <p class="mt-5 sm:mt-6 text-base sm:text-lg text-ink-500 max-w-2xl">
+      45 entreprises membres. Un laboratoire indépendant qui réunit, contribue et porte la voix collective auprès des instances publiques.
+    </p>
+    <div class="mt-7 sm:mt-8 flex flex-wrap gap-3">
+      <a href="#join" class="inline-flex items-center gap-2 bg-ink-900 text-paper-50 rounded-full px-5 sm:px-6 py-3 font-medium hover:bg-ink-700 transition w-full sm:w-auto justify-center">
+        Adhérer en 2026 →
+      </a>
+      <a href="#why" class="inline-flex items-center gap-2 bg-paper-50 border border-ink-900/10 rounded-full px-5 sm:px-6 py-3 font-medium hover:border-ink-900/30 transition w-full sm:w-auto justify-center">
+        Pourquoi adhérer ?
+      </a>
+    </div>
+
+    <div class="mt-12 sm:mt-14 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-paper-50 rounded-2xl p-4 sm:p-5 shadow-card">
+        <div class="display text-3xl sm:text-4xl font-semibold">45</div>
+        <div class="mt-1 text-[10px] sm:text-xs text-ink-500 uppercase tracking-wider">membres</div>
+      </div>
+      <div class="bg-paper-50 rounded-2xl p-4 sm:p-5 shadow-card">
+        <div class="display text-3xl sm:text-4xl font-semibold">24<span class="text-brand-500">+</span></div>
+        <div class="mt-1 text-[10px] sm:text-xs text-ink-500 uppercase tracking-wider">événements/an</div>
+      </div>
+      <div class="bg-paper-50 rounded-2xl p-4 sm:p-5 shadow-card">
+        <div class="display text-3xl sm:text-4xl font-semibold">10<span class="text-brand-500">+</span></div>
+        <div class="mt-1 text-[10px] sm:text-xs text-ink-500 uppercase tracking-wider">visites privées</div>
+      </div>
+      <div class="bg-paper-50 rounded-2xl p-4 sm:p-5 shadow-card">
+        <div class="display text-3xl sm:text-4xl font-semibold">12</div>
+        <div class="mt-1 text-[10px] sm:text-xs text-ink-500 uppercase tracking-wider">newsletters/an</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- 3 MISSIONS                                            -->
+<!-- ===================================================== -->
+<section class="py-16 sm:py-20 bg-paper-100">
+  <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal max-w-2xl">
+      <span class="chip">Raison d'être</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Trois missions fondatrices.</h2>
+    </div>
+    <div class="mt-8 sm:mt-10 grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+      <article class="reveal bg-paper-50 rounded-2xl p-6 sm:p-7 shadow-card">
+        <div class="w-9 h-9 rounded-lg bg-brand-100 grid place-items-center text-brand-700 font-semibold text-sm">I</div>
+        <h3 class="display mt-4 sm:mt-5 text-lg sm:text-xl font-semibold">Réunir & échanger</h3>
+        <p class="mt-2 text-sm text-ink-500">Entre acteurs économiques significatifs du quartier — laboratoire indépendant de réflexion.</p>
+      </article>
+      <article class="reveal bg-paper-50 rounded-2xl p-6 sm:p-7 shadow-card">
+        <div class="w-9 h-9 rounded-lg bg-brand-100 grid place-items-center text-brand-700 font-semibold text-sm">II</div>
+        <h3 class="display mt-4 sm:mt-5 text-lg sm:text-xl font-semibold">Contribuer</h3>
+        <p class="mt-2 text-sm text-ink-500">Aux travaux publics et privés concernant le futur du quartier de la Part-Dieu.</p>
+      </article>
+      <article class="reveal bg-paper-50 rounded-2xl p-6 sm:p-7 shadow-card sm:col-span-2 md:col-span-1">
+        <div class="w-9 h-9 rounded-lg bg-brand-100 grid place-items-center text-brand-700 font-semibold text-sm">III</div>
+        <h3 class="display mt-4 sm:mt-5 text-lg sm:text-xl font-semibold">Peser</h3>
+        <p class="mt-2 text-sm text-ink-500">Auprès des instances publiques sur tout projet ayant une incidence sur le quartier.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- POURQUOI ADHÉRER                                      -->
+<!-- ===================================================== -->
+<section id="why" class="py-16 sm:py-20 relative">
+  <div class="ambient"></div>
+  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal max-w-2xl">
+      <span class="chip">Pourquoi adhérer</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Six bénéfices concrets.</h2>
+      <p class="mt-3 text-ink-500 text-sm sm:text-base">Le CELPD n'est pas un club « réseau » comme les autres — c'est un outil d'influence et d'accès qui donne une longueur d'avance sur le quartier.</p>
+    </div>
+
+    <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <article class="reveal rounded-2xl bg-paper-50 p-6 shadow-card border-t-4 border-brand-500">
+        <div class="display text-4xl font-semibold text-brand-500">01</div>
+        <h3 class="display mt-3 text-xl font-semibold">Accès exclusifs</h3>
+        <p class="mt-2 text-sm text-ink-500">Visites privées de chantiers, bureaux et lieux culturels non-ouverts au public — Audessa, Tour Swiss Life, Primavera, Place Basse, Louvre au Centre, Archives.</p>
+      </article>
+      <article class="reveal rounded-2xl bg-paper-50 p-6 shadow-card border-t-4 border-brand-500">
+        <div class="display text-4xl font-semibold text-brand-500">02</div>
+        <h3 class="display mt-3 text-xl font-semibold">Réseau de pairs Part-Dieu</h3>
+        <p class="mt-2 text-sm text-ink-500">45 dirigeants et décideurs du quartier — Apicil, EY, CBRE, Solvay, Westfield, Icade, Banque Populaire, Bouygues, Setec. Rencontres mensuelles confidentielles.</p>
+      </article>
+      <article class="reveal rounded-2xl bg-paper-50 p-6 shadow-card border-t-4 border-brand-500">
+        <div class="display text-4xl font-semibold text-brand-500">03</div>
+        <h3 class="display mt-3 text-xl font-semibold">Voix collective</h3>
+        <p class="mt-2 text-sm text-ink-500">Dialogue direct avec SPL Part-Dieu, Métropole de Lyon et Ville sur l'avenir du quartier : projets urbains, mobilité, immobilier, attractivité.</p>
+      </article>
+      <article class="reveal rounded-2xl bg-paper-50 p-6 shadow-card border-t-4 border-brand-500">
+        <div class="display text-4xl font-semibold text-brand-500">04</div>
+        <h3 class="display mt-3 text-xl font-semibold">Visibilité ciblée</h3>
+        <p class="mt-2 text-sm text-ink-500">Mise en avant de vos actualités dans la newsletter mensuelle adressée aux 45 entreprises membres et aux partenaires institutionnels.</p>
+      </article>
+      <article class="reveal rounded-2xl bg-paper-50 p-6 shadow-card border-t-4 border-brand-500">
+        <div class="display text-4xl font-semibold text-brand-500">05</div>
+        <h3 class="display mt-3 text-xl font-semibold">Conférences de prescription</h3>
+        <p class="mt-2 text-sm text-ink-500">Petits-déjeuners SPL, conférence immobilière, ateliers TUBÀ data & mobilité — au plus près des décideurs.</p>
+      </article>
+      <article class="reveal rounded-2xl bg-paper-50 p-6 shadow-card border-t-4 border-brand-500">
+        <div class="display text-4xl font-semibold text-brand-500">06</div>
+        <h3 class="display mt-3 text-xl font-semibold">Engagement RSE</h3>
+        <p class="mt-2 text-sm text-ink-500">Challenges inter-entreprises (EFS — don du sang), partenariats Fondation de France — fédérer ses équipes autour de causes concrètes.</p>
+      </article>
+    </div>
+
+    <div class="mt-8 sm:mt-10 rounded-2xl bg-brand-500 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <div class="display text-xl sm:text-2xl font-semibold">Cotisation à partir de 180 € / an</div>
+        <p class="text-sm opacity-90 mt-1">Tarifs 2026 en baisse — voir la grille complète ci-dessous.</p>
+      </div>
+      <a href="#join" class="inline-flex items-center gap-2 bg-white text-brand-700 rounded-full px-5 py-2.5 font-medium hover:bg-paper-100 transition whitespace-nowrap">
+        Voir les tarifs →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- CHIFFRES 2025                                         -->
+<!-- ===================================================== -->
+<section class="py-16 sm:py-20 bg-paper-100">
+  <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal max-w-2xl">
+      <span class="chip">Année 2025 en chiffres</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Une année dense — 24 rendez-vous.</h2>
+      <p class="mt-3 text-ink-500 text-sm sm:text-base">Quatre familles d'événements qui structurent la valeur du Club.</p>
+    </div>
+    <div class="mt-10 grid lg:grid-cols-5 gap-6 lg:gap-8 items-center">
+      <div class="lg:col-span-2 reveal flex justify-center">
+        <svg viewBox="0 0 200 200" class="w-56 h-56 sm:w-64 sm:h-64" role="img" aria-label="Répartition événements 2025">
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#FAFAF7" stroke-width="28"/>
+          <g transform="rotate(-90 100 100)">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#16A0AF" stroke-width="28" stroke-dasharray="110 439.82" stroke-dashoffset="0"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#5BBEC8" stroke-width="28" stroke-dasharray="110 439.82" stroke-dashoffset="-110"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#0B1220" stroke-width="28" stroke-dasharray="91.6 439.82" stroke-dashoffset="-220"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#0C606A" stroke-width="28" stroke-dasharray="73.3 439.82" stroke-dashoffset="-311.6"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#94A3B8" stroke-width="28" stroke-dasharray="55 439.82" stroke-dashoffset="-384.9"/>
+          </g>
+          <text x="100" y="96" text-anchor="middle" font-family="Fraunces, serif" font-size="38" font-weight="600" fill="#0B1220">24</text>
+          <text x="100" y="118" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#3B4B6B" letter-spacing="1">ÉVÉNEMENTS</text>
+        </svg>
+      </div>
+      <div class="lg:col-span-3 grid sm:grid-cols-2 gap-3">
+        <div class="reveal rounded-2xl bg-paper-50 p-4 shadow-ring">
+          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span><span class="text-sm font-semibold">Visites privées</span></div><span class="display text-2xl font-semibold">6</span></div>
+          <p class="text-xs text-ink-500 mt-1">Chantiers, bureaux, lieux en transformation.</p>
+          <div class="mt-2 h-1.5 bg-paper-100 rounded-full overflow-hidden"><div class="h-full bg-brand-500" style="width:25%"></div></div>
+        </div>
+        <div class="reveal rounded-2xl bg-paper-50 p-4 shadow-ring">
+          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-brand-300"></span><span class="text-sm font-semibold">Patrimoine & culture</span></div><span class="display text-2xl font-semibold">6</span></div>
+          <p class="text-xs text-ink-500 mt-1">Place Basse, Louvre, BM Lyon, Archives…</p>
+          <div class="mt-2 h-1.5 bg-paper-100 rounded-full overflow-hidden"><div class="h-full bg-brand-300" style="width:25%"></div></div>
+        </div>
+        <div class="reveal rounded-2xl bg-paper-50 p-4 shadow-ring">
+          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-ink-900"></span><span class="text-sm font-semibold">Conférences</span></div><span class="display text-2xl font-semibold">5</span></div>
+          <p class="text-xs text-ink-500 mt-1">SPL, TUBÀ, mobilité, immobilier.</p>
+          <div class="mt-2 h-1.5 bg-paper-100 rounded-full overflow-hidden"><div class="h-full bg-ink-900" style="width:21%"></div></div>
+        </div>
+        <div class="reveal rounded-2xl bg-paper-50 p-4 shadow-ring">
+          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-brand-700"></span><span class="text-sm font-semibold">Afterworks</span></div><span class="display text-2xl font-semibold">4</span></div>
+          <p class="text-xs text-ink-500 mt-1">Forum, Auditorium, Dior, Audessa.</p>
+          <div class="mt-2 h-1.5 bg-paper-100 rounded-full overflow-hidden"><div class="h-full bg-brand-700" style="width:17%"></div></div>
+        </div>
+        <div class="reveal rounded-2xl bg-paper-50 p-4 shadow-ring sm:col-span-2">
+          <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-ink-300"></span><span class="text-sm font-semibold">Réunions CA / AG</span></div><span class="display text-2xl font-semibold">3</span></div>
+          <p class="text-xs text-ink-500 mt-1">Vie statutaire et gouvernance du Club.</p>
+          <div class="mt-2 h-1.5 bg-paper-100 rounded-full overflow-hidden"><div class="h-full bg-ink-300" style="width:12%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- CARTE INTERACTIVE DES MEMBRES                         -->
+<!-- ===================================================== -->
+<section id="members" class="relative py-16 sm:py-24 overflow-hidden">
+  <div class="ambient"></div>
+  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal max-w-2xl">
+      <span class="chip">La carte des membres</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">45 entreprises, un quartier.</h2>
+      <p class="mt-3 text-ink-700 text-sm sm:text-base">Survolez un nom dans la liste — son emplacement Part-Dieu pulse sur la carte et active les liens vers les autres membres.</p>
+    </div>
+
+    <div class="mt-10 grid lg:grid-cols-5 gap-6">
+      <!-- MAP -->
+      <div class="lg:col-span-3 reveal">
+        <div class="map-wrap">
+          <svg id="map" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet" aria-label="Carte interactive des membres">
+            <!-- Streets layer -->
+            <g class="street-layer" fill="none">
+              <!-- Boulevards majeurs -->
+              <path class="street street-major" d="M50,180 L950,180" /> <!-- Bd Vivier-Merle (nord) -->
+              <path class="street street-major" d="M50,540 L950,540" /> <!-- Av. Félix Faure / Garibaldi sud -->
+              <path class="street street-major" d="M180,40 L180,660" /> <!-- Rue Garibaldi -->
+              <path class="street street-major" d="M820,40 L820,660" /> <!-- Bd Vivier-Merle est -->
+              <!-- Rues medium -->
+              <path class="street street-medium" d="M50,300 L950,300" /> <!-- Cours Lafayette -->
+              <path class="street street-medium" d="M50,420 L950,420" /> <!-- Rue Servient -->
+              <path class="street street-medium" d="M380,40 L380,660" /> <!-- Rue de la Villette -->
+              <path class="street street-medium" d="M580,40 L580,660" /> <!-- Rue Garibaldi center -->
+              <path class="street street-medium" d="M700,40 L700,660" /> <!-- Place Béraudier axe -->
+              <!-- Rues mineures -->
+              <path class="street street-minor" d="M50,240 L950,240" />
+              <path class="street street-minor" d="M50,360 L950,360" />
+              <path class="street street-minor" d="M50,480 L950,480" />
+              <path class="street street-minor" d="M280,40 L280,660" />
+              <path class="street street-minor" d="M480,40 L480,660" />
+              <path class="street street-minor" d="M650,40 L650,660" />
+              <path class="street street-minor" d="M760,40 L760,660" />
+              <path class="street street-minor" d="M880,40 L880,660" />
+            </g>
+
+            <!-- Landmarks (texte seulement, doux) -->
+            <g font-family="Inter, sans-serif" font-size="9" fill="#0C606A" opacity=".6">
+              <text x="700" y="290" text-anchor="middle">GARE PART-DIEU</text>
+              <text x="500" y="290" text-anchor="middle">CC PART-DIEU</text>
+              <text x="500" y="540" text-anchor="middle" >SILEX²</text>
+              <text x="280" y="540" text-anchor="middle">AUDITORIUM</text>
+              <text x="855" y="170" text-anchor="end">BD VIVIER MERLE</text>
+              <text x="200" y="170" text-anchor="start">RUE GARIBALDI</text>
+            </g>
+
+            <!-- Connecting links (drawn dynamically) -->
+            <g id="links"></g>
+
+            <!-- Markers (drawn dynamically) -->
+            <g id="markers"></g>
+          </svg>
+        </div>
+        <p class="mt-3 text-[11px] text-ink-300 italic">
+          Carte stylisée — positions approximatives. Sources confirmées : Apicil (Tour To-Lyon), Westfield (CC Part-Dieu), EY (Tour Oxygène), Bouygues BSE (Tour Swiss Life), Solvay (Silex²), Auditorium, BNP Paribas (Tour Part-Dieu). Autres entreprises positionnées indicativement — à vérifier.
+        </p>
+      </div>
+
+      <!-- LISTE -->
+      <div class="lg:col-span-2 reveal">
+        <div class="bg-paper-50 rounded-2xl p-4 shadow-card max-h-[640px] overflow-y-auto">
+          <div class="text-[10px] uppercase tracking-wider text-ink-500 font-semibold mb-3">45 entreprises adhérentes</div>
+          <div id="members-list" class="grid gap-1.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- AGENDA 2026                                           -->
+<!-- ===================================================== -->
+<section id="agenda" class="py-16 sm:py-20 bg-paper-100">
+  <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div>
+        <span class="chip">Programmation 2026</span>
+        <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Les prochains rendez-vous.</h2>
+      </div>
+      <p class="text-ink-500 text-sm max-w-sm">Réservés aux membres — rejoindre le Club pour recevoir les invitations.</p>
+    </div>
+    <ol class="mt-8 sm:mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-3" id="agenda-grid"></ol>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- ADHÉSION                                              -->
+<!-- ===================================================== -->
+<section id="join" class="py-16 sm:py-20 relative">
+  <div class="ambient"></div>
+  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal max-w-2xl">
+      <span class="chip">Adhésion 2026</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Cotisations en baisse.</h2>
+      <p class="mt-3 text-ink-500 text-sm sm:text-base">Effort ciblé sur les grandes entreprises pour renforcer l'attractivité du Club.</p>
+    </div>
+
+    <div class="mt-8 sm:mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div class="reveal rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-card">
+        <div class="text-[10px] sm:text-xs uppercase tracking-wider text-ink-500">+ de 500 sal.</div>
+        <div class="display mt-2 text-2xl sm:text-3xl font-semibold">1 300 €</div>
+        <div class="mt-1 text-xs text-brand-700 font-medium">−300 €</div>
+      </div>
+      <div class="reveal rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-card">
+        <div class="text-[10px] sm:text-xs uppercase tracking-wider text-ink-500">100 — 499 sal.</div>
+        <div class="display mt-2 text-2xl sm:text-3xl font-semibold">700 €</div>
+        <div class="mt-1 text-xs text-brand-700 font-medium">−150 €</div>
+      </div>
+      <div class="reveal rounded-2xl bg-ink-900 text-paper-50 p-4 sm:p-5 shadow-card relative">
+        <div class="absolute -top-2.5 left-3 chip">Cible</div>
+        <div class="text-[10px] sm:text-xs uppercase tracking-wider text-ink-300">50 — 99 sal.</div>
+        <div class="display mt-2 text-2xl sm:text-3xl font-semibold">500 €</div>
+        <div class="mt-1 text-xs text-brand-300 font-medium">−100 €</div>
+      </div>
+      <div class="reveal rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-card">
+        <div class="text-[10px] sm:text-xs uppercase tracking-wider text-ink-500">10 — 49 sal.</div>
+        <div class="display mt-2 text-2xl sm:text-3xl font-semibold">300 €</div>
+        <div class="mt-1 text-xs text-brand-700 font-medium">−50 €</div>
+      </div>
+      <div class="reveal rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-card col-span-2 sm:col-span-1">
+        <div class="text-[10px] sm:text-xs uppercase tracking-wider text-ink-500">− de 10 sal.</div>
+        <div class="display mt-2 text-2xl sm:text-3xl font-semibold">180 €</div>
+        <div class="mt-1 text-xs text-ink-500 font-medium">inchangé</div>
+      </div>
+    </div>
+
+    <p class="mt-6 text-xs text-ink-500">
+      <strong>Prorata temporis</strong> · 1ᵉʳ semestre 100 % · 2ⁿᵈ semestre 50 %.
+      &nbsp;·&nbsp;
+      <strong>Intéressement apporteur</strong> · 20 % de la cotisation reversés la 1ʳᵉ année.
+    </p>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- GOUVERNANCE                                           -->
+<!-- ===================================================== -->
+<section id="governance" class="py-16 sm:py-20 bg-paper-100">
+  <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal max-w-2xl">
+      <span class="chip">Gouvernance 2026-2028</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Un Conseil d'administration renouvelé.</h2>
+      <p class="mt-3 text-ink-500 text-sm sm:text-base">18 administrateurs élus à l'AG du 28 avril 2026 — mandats de 2 ans.</p>
+    </div>
+
+    <div class="mt-8 grid grid-cols-3 gap-3 max-w-2xl">
+      <div class="rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-ring">
+        <div class="display text-3xl sm:text-4xl font-semibold">18</div>
+        <div class="text-xs sm:text-sm text-ink-500 mt-1">administrateurs</div>
+      </div>
+      <div class="rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-ring">
+        <div class="display text-3xl sm:text-4xl font-semibold">8</div>
+        <div class="text-xs sm:text-sm text-ink-500 mt-1">membres bureau</div>
+      </div>
+      <div class="rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-ring">
+        <div class="display text-3xl sm:text-4xl font-semibold">2 ans</div>
+        <div class="text-xs sm:text-sm text-ink-500 mt-1">mandat</div>
+      </div>
+    </div>
+
+    <ul id="ca-grid" class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3"></ul>
+
+    <div class="mt-6 text-xs text-ink-300">Démissions actées · KEOLIS · EDF</div>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- FORM                                                  -->
+<!-- ===================================================== -->
+<section id="form" class="py-16 sm:py-20">
+  <div class="max-w-3xl mx-auto px-5 sm:px-6 lg:px-10">
+    <div class="reveal text-center">
+      <span class="chip">Demande d'adhésion</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Rejoindre le CELPD.</h2>
+      <p class="mt-3 text-ink-500 text-sm sm:text-base">Renseignez les informations ci-dessous — le bureau vous recontacte sous 5 jours ouvrés.</p>
+    </div>
+
+    <form id="adhesion-form" action="https://formsubmit.co/contact@clubpartdieu.fr" method="POST"
+      class="mt-8 sm:mt-10 bg-paper-100 rounded-3xl p-5 sm:p-8 md:p-10 shadow-card grid gap-4">
+      <input type="hidden" name="_subject" value="Demande d'adhésion CELPD — nouveau formulaire">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="true">
+      <input type="hidden" name="_next" value="https://clubpartdieu.fr/?adhesion=ok">
+      <input type="text" name="_honey" style="display:none">
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="label" for="raison_sociale">Raison sociale *</label>
+          <input class="field" id="raison_sociale" name="Raison sociale" type="text" required></div>
+        <div><label class="label" for="siret">SIRET</label>
+          <input class="field" id="siret" name="SIRET" type="text" inputmode="numeric" placeholder="14 chiffres"></div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="label" for="effectif">Effectif *</label>
+          <select class="field" id="effectif" name="Effectif" required>
+            <option value="">— Sélectionner —</option>
+            <option value="− de 10 salariés (180 €)">− de 10 salariés · 180 €</option>
+            <option value="10 à 49 salariés (300 €)">10 à 49 salariés · 300 €</option>
+            <option value="50 à 99 salariés (500 €)">50 à 99 salariés · 500 €</option>
+            <option value="100 à 499 salariés (700 €)">100 à 499 salariés · 700 €</option>
+            <option value="+ de 500 salariés (1 300 €)">+ de 500 salariés · 1 300 €</option>
+          </select>
+          <p id="tier-hint" class="mt-2 text-xs text-brand-700 font-medium hidden"></p>
+        </div>
+        <div><label class="label" for="adresse">Adresse Part-Dieu *</label>
+          <input class="field" id="adresse" name="Adresse" type="text" placeholder="Site implanté sur le quartier" required></div>
+      </div>
+      <hr class="my-2 border-ink-900/5">
+      <div class="text-xs uppercase tracking-wider text-ink-500 font-semibold">Référent</div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="label" for="nom">Nom & prénom *</label><input class="field" id="nom" name="Référent" type="text" required></div>
+        <div><label class="label" for="fonction">Fonction *</label><input class="field" id="fonction" name="Fonction" type="text" required></div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="label" for="email">Email *</label><input class="field" id="email" name="Email" type="email" required></div>
+        <div><label class="label" for="tel">Téléphone</label><input class="field" id="tel" name="Téléphone" type="tel" placeholder="+33…"></div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="label" for="site">Site web / LinkedIn</label><input class="field" id="site" name="Site / LinkedIn" type="url" placeholder="https://…"></div>
+        <div><label class="label" for="apporteur">Comment nous avez-vous connus ?</label><input class="field" id="apporteur" name="Apporteur" type="text" placeholder="Membre apporteur, événement, presse…"></div>
+      </div>
+      <div><label class="label" for="message">Message libre</label><textarea class="field" id="message" name="Message" rows="4" placeholder="Vos motivations, attentes vis-à-vis du Club, projets en lien avec le quartier…"></textarea></div>
+      <label class="flex items-start gap-3 text-xs text-ink-500 mt-2">
+        <input type="checkbox" name="RGPD" required class="mt-0.5 w-4 h-4">
+        <span>J'autorise le CELPD à conserver mes informations le temps de l'instruction de ma candidature et reconnais que celle-ci sera examinée en Conseil d'administration.</span>
+      </label>
+      <button type="submit" class="mt-2 inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white rounded-full px-6 py-3 font-medium transition w-full sm:w-auto sm:self-start">
+        Envoyer ma demande →
+      </button>
+      <p class="text-xs text-ink-300 mt-2">Alternative — email direct à
+        <a class="underline hover:text-ink-900" href="mailto:contact@clubpartdieu.fr?subject=Demande%20d'adhésion%20CELPD">contact@clubpartdieu.fr</a>.
+      </p>
+    </form>
+  </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- FOOTER                                                -->
+<!-- ===================================================== -->
+<footer class="border-t border-ink-900/5 py-10 bg-paper-50">
+  <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-10 grid sm:grid-cols-3 gap-6 text-sm text-ink-500">
+    <div>
+      <div class="flex items-center gap-2 font-semibold text-ink-900">
+        <img src="https://static.wixstatic.com/media/474b60_1198fcb9d862445caaf9398c23a80c1b~mv2.png" alt="CELPD" class="h-7 w-auto"
+             onerror="this.outerHTML='<span class=\'w-7 h-7 rounded-md bg-brand-500 grid place-items-center text-white text-xs\'>C</span>'">
+        CELPD
+      </div>
+      <p class="mt-3">Club des Entreprises Lyon Part-Dieu — Association loi 1901.</p>
+    </div>
+    <div>
+      <div class="font-semibold text-ink-900">Coordonnées</div>
+      <p class="mt-2">24, rue Turbil · 69003 Lyon<br/>SIREN 753 985 142</p>
+      <p class="mt-2"><a class="underline hover:text-ink-900" href="mailto:contact@clubpartdieu.fr">contact@clubpartdieu.fr</a></p>
+    </div>
+    <div>
+      <div class="font-semibold text-ink-900">Liens</div>
+      <ul class="mt-2 space-y-1">
+        <li><a href="#why" class="hover:text-ink-900">Pourquoi adhérer</a></li>
+        <li><a href="#members" class="hover:text-ink-900">Membres</a></li>
+        <li><a href="#agenda" class="hover:text-ink-900">Programmation 2026</a></li>
+        <li><a href="#governance" class="hover:text-ink-900">Gouvernance</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-10 mt-8 text-xs text-ink-300 flex flex-wrap gap-2 sm:gap-4 justify-between">
+    <span>© 2026 CELPD — tous droits réservés.</span>
+    <span>Statuts actualisés le 12 avril 2022 · clubpartdieu.fr</span>
+  </div>
+</footer>
+
+<script>
+  // ============================================================
+  // DATA · MEMBRES + COORDONNÉES SUR LA CARTE STYLISÉE
+  // x,y dans le viewBox 1000×700 — illustratifs sauf flag confirmed
+  // ============================================================
+  const members = [
+    // CONFIRMÉS — implantations publiques connues
+    { n:'APICIL',                       t:1300, x:760, y:140, c:true },  // Tour To-Lyon
+    { n:'WESTFIELD PART-DIEU',          t:300,  x:500, y:280, c:true },  // CC Part-Dieu
+    { n:'EY',                           t:700,  x:830, y:230, c:true },  // Tour Oxygène
+    { n:'BOUYGUES BÂTIMENT SUD-EST',    t:1300, x:430, y:410, c:true },  // Tour Swiss Life
+    { n:'SOLVAY',                       t:1300, x:500, y:540, c:true },  // Silex²
+    { n:'AUDITORIUM DE LYON',           t:0,    x:280, y:540, c:true },  // Auditorium
+    { n:'BNP PARIBAS REAL ESTATE',      t:500,  x:580, y:340, c:true },  // Tour Part-Dieu
+    { n:'BANQUE POPULAIRE AURA',        t:1300, x:380, y:230, c:true },  // Tour Incity
+    { n:'CAF DU RHÔNE',                 t:1300, x:280, y:310, c:false },
+    { n:'ENEDIS',                       t:1300, x:160, y:380, c:false },
+
+    // Tier 700 €
+    { n:'LYON PARC AUTO',               t:700,  x:680, y:480, c:false },
+    { n:'DALKIA',                       t:700,  x:120, y:230, c:false },
+    { n:'JC DECAUX',                    t:700,  x:870, y:380, c:false },
+    { n:'SETEC',                        t:700,  x:760, y:430, c:false },
+    { n:'SYSTRA',                       t:700,  x:130, y:480, c:false },
+    { n:'SEPR',                         t:700,  x:870, y:480, c:false },
+    { n:'AOL',                          t:700,  x:330, y:130, c:false },
+
+    // Tier 500 €
+    { n:'CBRE',                         t:500,  x:620, y:230, c:false },
+    { n:'ICADE',                        t:500,  x:740, y:340, c:false },
+    { n:'DECATHLON',                    t:500,  x:580, y:130, c:false },
+    { n:'ACTION LOGEMENT',              t:500,  x:240, y:380, c:false },
+    { n:'AA LYON',                      t:500,  x:430, y:340, c:false },
+    { n:'MULTIBURO',                    t:500,  x:870, y:140, c:false },
+    { n:'SERL',                         t:500,  x:330, y:610, c:false },
+
+    // Tier 300 €
+    { n:'ADALTYS',                      t:300,  x:240, y:480, c:false },
+    { n:'CAMPANILE',                    t:300,  x:680, y:130, c:false },
+    { n:'INITIUM',                      t:300,  x:430, y:480, c:false },
+    { n:'KARDHAM',                      t:300,  x:160, y:610, c:false },
+    { n:'KORUS GROUP',                  t:300,  x:380, y:130, c:false },
+    { n:'SYNDICAT COPRO CC PART-DIEU',  t:300,  x:540, y:340, c:false },
+
+    // Tier 180 €
+    { n:'ADIRA',                        t:180,  x:600, y:480, c:false },
+    { n:'AFNOR',                        t:180,  x:870, y:280, c:false },
+    { n:'ALTIMIS',                      t:180,  x:240, y:230, c:false },
+    { n:'CHEUVREUX LYON',               t:180,  x:130, y:540, c:false },
+    { n:'CITADINES — ASCOTT',           t:180,  x:740, y:230, c:false },
+    { n:'COURIR POUR ELLES',            t:180,  x:880, y:610, c:false },
+    { n:'EFS',                          t:180,  x:130, y:140, c:false },
+    { n:'EXOFLOW',                      t:180,  x:430, y:610, c:false },
+    { n:'HIPTOWN',                      t:180,  x:330, y:480, c:false },
+    { n:'M PLUS M',                     t:180,  x:230, y:140, c:false },
+    { n:'PARVIS PART-DIEU',             t:180,  x:540, y:480, c:false },
+    { n:'PIGNON SUR RUE',               t:180,  x:740, y:610, c:false },
+    { n:'SPACES',                       t:180,  x:620, y:340, c:false },
+    { n:'WOJO & MAMAWORKS',             t:180,  x:160, y:340, c:false },
+
+    // Partenariat
+    { n:'EGIS',                         t:0,    x:330, y:340, c:false },
+  ];
+
+  function tierLabel(t) {
+    if(t===0) return 'Partenariat';
+    return `${t.toLocaleString('fr-FR')} €`;
+  }
+
+  // ============================================================
+  // BUILD MAP MARKERS + LIST
+  // ============================================================
+  const markersGroup = document.getElementById('markers');
+  const linksGroup   = document.getElementById('links');
+  const list         = document.getElementById('members-list');
+
+  function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+  function buildMap() {
+    markersGroup.innerHTML = members.map((m, i) => {
+      const id = slug(m.n);
+      // label box width approximated from name length
+      const w = Math.max(80, m.n.length * 6);
+      const lx = m.x + 12;
+      const ly = m.y - 20;
+      return `
+        <g class="marker" data-id="${id}">
+          <circle class="marker-pulse" cx="${m.x}" cy="${m.y}" r="6"></circle>
+          <circle class="dot" cx="${m.x}" cy="${m.y}" r="5"></circle>
+          <rect class="label-bg" x="${lx}" y="${ly}" width="${w}" height="18" rx="4"></rect>
+          <text class="label-text" x="${lx + 6}" y="${ly + 12}">${m.n}</text>
+        </g>
+      `;
+    }).join('');
+  }
+
+  function buildList() {
+    list.innerHTML = members.map(m => {
+      const id = slug(m.n);
+      return `
+        <div class="member-row" data-id="${id}" data-tier="${m.t}">
+          <span class="dot"></span>
+          <span class="grow">${m.n}</span>
+          ${m.c ? '<span class="text-[10px] opacity-60">●</span>' : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function buildLinks() {
+    // Pre-build all-pairs short link spaghetti (only render visible ones on hover)
+    // Strategy : on hover of one node, draw 3 nearest links
+    return null;
+  }
+
+  // ============================================================
+  // SYNC HOVER — list ↔ markers + draw links to nearest neighbours
+  // ============================================================
+  function nearestNeighbours(idx, k=3) {
+    const m = members[idx];
+    return members
+      .map((mm, i) => ({ i, d: i===idx ? Infinity : Math.hypot(mm.x-m.x, mm.y-m.y) }))
+      .sort((a,b)=>a.d-b.d).slice(0,k).map(o=>o.i);
+  }
+
+  function setActive(id) {
+    // markers
+    document.querySelectorAll('#markers .marker').forEach(g => {
+      g.classList.toggle('on', g.dataset.id === id);
+    });
+    // list rows
+    document.querySelectorAll('.member-row').forEach(r => {
+      r.classList.toggle('on', r.dataset.id === id);
+    });
+    // links
+    linksGroup.innerHTML = '';
+    if(!id) return;
+    const idx = members.findIndex(m => slug(m.n)===id);
+    if(idx < 0) return;
+    const me = members[idx];
+    const nbs = nearestNeighbours(idx, 4);
+    linksGroup.innerHTML = nbs.map(j => {
+      const t = members[j];
+      return `<line class="link on" x1="${me.x}" y1="${me.y}" x2="${t.x}" y2="${t.y}"></line>`;
+    }).join('');
+    // also pulse the neighbours softly (transient class)
+    nbs.forEach(j => {
+      const id2 = slug(members[j].n);
+      document.querySelector(`#markers .marker[data-id="${id2}"]`)?.classList.add('on');
+    });
+  }
+
+  function bindHover() {
+    document.querySelectorAll('.member-row').forEach(r => {
+      r.addEventListener('mouseenter', ()=> setActive(r.dataset.id));
+      r.addEventListener('mouseleave', ()=> setActive(null));
+      r.addEventListener('focus',     ()=> setActive(r.dataset.id));
+      r.addEventListener('blur',      ()=> setActive(null));
+    });
+    document.querySelectorAll('#markers .marker').forEach(g => {
+      g.addEventListener('mouseenter', ()=> setActive(g.dataset.id));
+      g.addEventListener('mouseleave', ()=> setActive(null));
+    });
+  }
+
+  // ============================================================
+  // CA + Agenda + Form (inchangés)
+  // ============================================================
+  const ca2026 = [
+    ['ADALTYS','Denis SANTY'],['APICIL','Rachel LECENDRIER'],['AUDITORIUM DE LYON','Nicolas DROUIN'],
+    ['BANQUE POPULAIRE','Grégoire PETIT'],['BOUYGUES BÂT. SUD-EST','Thibaut D’HUART'],['CAF DU RHÔNE','à désigner'],
+    ['CBRE','François DEVILLARD'],['DALKIA','Stéphane JALON'],['EGIS','Julie CORDIN'],['ENEDIS','à désigner'],
+    ['EY','Marc-André AUDISIO'],['EXOFLOW','Victor BOUIN'],['ICADE','Laurent DOYAT'],['KARDHAM','Adeline CŒUR'],
+    ['LPA – SPL Mobilité','Véronique BRU'],['SETEC','Pascal BLACHIER'],['SOLVAY','Bruno COSENTINO'],['WESTFIELD PART-DIEU','Julie LETHENET'],
+  ];
+  function renderCA() {
+    document.getElementById('ca-grid').innerHTML = ca2026.map(([entity, person])=>`
+      <li class="reveal flex items-center justify-between rounded-2xl bg-paper-50 px-4 py-3 sm:px-5 sm:py-4 hover:bg-brand-500 hover:text-white transition group gap-3">
+        <span class="font-semibold text-xs sm:text-sm">${entity}</span>
+        <span class="text-[11px] sm:text-xs text-ink-500 group-hover:text-white text-right">${person}</span>
+      </li>
+    `).join('');
+  }
+
+  const events2026 = [
+    { date:'29 janv.', title:'Galette des rois & Apicil', loc:'Tour To-Lyon', tag:'Apéro' },
+    { date:'06 fév.',  title:'Visite privée Gare Part-Dieu', loc:'Complet', tag:'Visite' },
+    { date:'21 avril', title:'Conférence Immobilière SPL', loc:'Maison du Projet', tag:'Conférence' },
+    { date:'28 avril', title:'Assemblée Générale 2026', loc:'Silex²', tag:'AG' },
+    { date:'30 avril', title:'Visite site Vejjo', loc:'', tag:'Visite' },
+    { date:'05 mai',   title:'Centrale froid Mouton-Duvernet', loc:'', tag:'Visite' },
+    { date:'Juin',     title:'Challenge inter-entreprises EFS × CELPD', loc:'tout le mois', tag:'Engagement' },
+    { date:'11 juin',  title:'Atelier Decathlon / Maison du Vélo', loc:'Maison du Vélo', tag:'Atelier' },
+    { date:'02 juillet', title:'Afterwork & remise des trophées EFS', loc:'', tag:'Apéro' },
+  ];
+  function renderAgenda() {
+    document.getElementById('agenda-grid').innerHTML = events2026.map(e => `
+      <li class="reveal rounded-2xl bg-paper-50 p-4 sm:p-5 shadow-ring hover:shadow-card transition">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="display text-base sm:text-lg font-semibold">${e.date}</span>
+          <span class="text-[10px] uppercase tracking-wider font-bold text-brand-700 whitespace-nowrap">${e.tag}</span>
+        </div>
+        <h3 class="mt-1 font-semibold text-ink-900 text-sm">${e.title}</h3>
+        ${e.loc ? `<p class="text-xs text-ink-500 mt-0.5">${e.loc}</p>`:''}
+      </li>
+    `).join('');
+  }
+
+  const tierHints = {
+    '− de 10 salariés (180 €)':       'Cotisation 2026 : 180 € (inchangé).',
+    '10 à 49 salariés (300 €)':       'Cotisation 2026 : 300 € (−50 € vs 2025).',
+    '50 à 99 salariés (500 €)':       'Cotisation 2026 : 500 € (−100 € vs 2025).',
+    '100 à 499 salariés (700 €)':     'Cotisation 2026 : 700 € (−150 € vs 2025).',
+    '+ de 500 salariés (1 300 €)':    'Cotisation 2026 : 1 300 € (−300 € vs 2025).'
+  };
+  function bindTierHint() {
+    const sel = document.getElementById('effectif');
+    const hint = document.getElementById('tier-hint');
+    if(!sel || !hint) return;
+    sel.addEventListener('change', ()=>{
+      const t = tierHints[sel.value];
+      if(t) { hint.textContent = t; hint.classList.remove('hidden'); }
+      else  { hint.classList.add('hidden'); }
+    });
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); sendHeight(); }});
+  }, { threshold: 0.08 });
+
+  function sendHeight() {
+    const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    try {
+      window.parent.postMessage({ type:'WIX_HEIGHT', height:h }, '*');
+      window.parent.postMessage({ height:h }, '*');
+    } catch(e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    buildMap();
+    buildList();
+    bindHover();
+    renderCA();
+    renderAgenda();
+    bindTierHint();
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+    sendHeight();
+    window.addEventListener('load', sendHeight);
+    new ResizeObserver(sendHeight).observe(document.body);
+  });
+</script>
+
+</body>
+</html>
