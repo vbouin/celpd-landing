@@ -62,6 +62,16 @@
   .topnav a { font-size:.82rem; font-weight:600; color:#3B4B6B; transition:color .2s; }
   .topnav a:hover { color:#0C606A; }
 
+  /* hero video background */
+  .hero-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
+  .hero-scrim { position:absolute; inset:0; z-index:1;
+    background:linear-gradient(180deg, rgba(5,59,65,.55) 0%, rgba(11,18,32,.45) 45%, rgba(11,18,32,.72) 100%); }
+  #top > .relative { z-index:2; }
+
+  /* framed in-page video */
+  .video-frame { position:relative; border-radius:1.25rem; overflow:hidden; box-shadow:0 20px 50px -22px rgba(11,18,32,.5); border:1px solid rgba(22,160,175,.2); background:#0B1220; }
+  .video-frame video { display:block; width:100%; height:100%; object-fit:cover; }
+
   .news { transition:transform .2s, box-shadow .2s; }
   .news:hover { transform:translateY(-3px); box-shadow:0 12px 30px -14px rgba(11,18,32,.28); }
   .news-date { font-variant-numeric:tabular-nums; }
@@ -94,25 +104,30 @@
 </header>
 
 <!-- ============================ HERO ============================ -->
-<section id="top" class="relative overflow-hidden">
-  <div class="ambient"></div>
-  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10 pt-12 sm:pt-16 pb-14 sm:pb-20">
-    <span class="chip">Le journal du Club · Part-Dieu</span>
-    <h1 class="display mt-5 text-[2.4rem] sm:text-5xl md:text-6xl font-semibold leading-[1.03] max-w-4xl">
-      Les dernières nouvelles du <span class="italic text-brand-500">Club des Entreprises Lyon Part-Dieu.</span>
+<section id="top" class="relative overflow-hidden text-white">
+  <!-- Vidéo de fond drone -->
+  <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="">
+    <source src="media/hero-drone.mp4" type="video/mp4">
+  </video>
+  <div class="hero-scrim"></div>
+
+  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-16 sm:pb-24">
+    <span class="chip" style="background:rgba(255,255,255,.14);color:#fff">Le journal du Club · Part-Dieu</span>
+    <h1 class="display mt-5 text-[2.4rem] sm:text-5xl md:text-6xl font-semibold leading-[1.03] max-w-4xl" style="text-shadow:0 2px 24px rgba(0,0,0,.45)">
+      Les dernières nouvelles du <span class="italic text-brand-300">Club des Entreprises Lyon Part-Dieu.</span>
     </h1>
-    <p class="mt-5 text-base sm:text-lg text-ink-500 max-w-2xl">
+    <p class="mt-5 text-base sm:text-lg text-white/85 max-w-2xl" style="text-shadow:0 1px 12px rgba(0,0,0,.4)">
       Événements, visites privées, ateliers, avantages adhérents et arrivées de nouveaux membres — retrouvez ici toute l'actualité du Club, mise à jour au fil de nos communications.
     </p>
     <div class="mt-7 flex flex-wrap gap-3">
       <a href="#actus" class="inline-flex items-center gap-2 bg-brand-500 text-white rounded-full px-5 py-3 font-medium hover:bg-brand-600 transition w-full sm:w-auto justify-center">Voir les actualités →</a>
-      <a href="#adhesion" class="inline-flex items-center gap-2 bg-paper-50 border border-ink-900/10 rounded-full px-5 py-3 font-medium hover:border-ink-900/30 transition w-full sm:w-auto justify-center">Rejoindre le Club</a>
+      <a href="#adhesion" class="inline-flex items-center gap-2 bg-white/10 border border-white/25 backdrop-blur rounded-full px-5 py-3 font-medium hover:bg-white/20 transition w-full sm:w-auto justify-center">Rejoindre le Club</a>
     </div>
 
     <div class="mt-12 grid grid-cols-3 gap-3 max-w-xl">
-      <div class="bg-paper-50 rounded-2xl p-4 shadow-card"><div class="display text-3xl font-semibold">2012</div><div class="mt-1 text-[10px] text-ink-500 uppercase tracking-wider">fondation</div></div>
-      <div class="bg-paper-50 rounded-2xl p-4 shadow-card"><div class="display text-3xl font-semibold">45<span class="text-brand-500">+</span></div><div class="mt-1 text-[10px] text-ink-500 uppercase tracking-wider">entreprises</div></div>
-      <div class="bg-paper-50 rounded-2xl p-4 shadow-card"><div class="display text-3xl font-semibold">177 ha</div><div class="mt-1 text-[10px] text-ink-500 uppercase tracking-wider">de quartier</div></div>
+      <div class="bg-white/10 backdrop-blur border border-white/15 rounded-2xl p-4"><div class="display text-3xl font-semibold">2012</div><div class="mt-1 text-[10px] text-white/70 uppercase tracking-wider">fondation</div></div>
+      <div class="bg-white/10 backdrop-blur border border-white/15 rounded-2xl p-4"><div class="display text-3xl font-semibold">45<span class="text-brand-300">+</span></div><div class="mt-1 text-[10px] text-white/70 uppercase tracking-wider">entreprises</div></div>
+      <div class="bg-white/10 backdrop-blur border border-white/15 rounded-2xl p-4"><div class="display text-3xl font-semibold">177 ha</div><div class="mt-1 text-[10px] text-white/70 uppercase tracking-wider">de quartier</div></div>
     </div>
   </div>
 </section>
@@ -128,6 +143,28 @@
       <p class="text-ink-500 text-sm max-w-sm">Un aperçu de nos communications récentes — les invitations complètes sont adressées par e-mail aux adhérents.</p>
     </div>
     <div id="actus-grid" class="mt-9 sm:mt-11 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+</section>
+
+<!-- ====================== VIDÉO QUARTIER ======================= -->
+<section id="quartier" class="py-14 sm:py-20 relative overflow-hidden">
+  <div class="ambient"></div>
+  <div class="relative max-w-6xl mx-auto px-5 sm:px-6 lg:px-10 grid lg:grid-cols-5 gap-8 items-center">
+    <div class="reveal lg:col-span-2">
+      <span class="chip">Au cœur de la Part-Dieu</span>
+      <h2 class="display mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold">Un quartier qui se réinvente.</h2>
+      <p class="mt-4 text-ink-500 text-sm sm:text-base">
+        177 hectares en pleine transformation, sur les 3ᵉ et 6ᵉ arrondissements de Lyon. Tours, gares, commerces, culture : le Club réunit les entreprises qui font vivre et façonnent ce territoire — et porte leur voix collective auprès des instances publiques.
+      </p>
+      <a href="#adhesion" class="mt-6 inline-flex items-center gap-2 bg-ink-900 text-paper-50 rounded-full px-5 py-3 font-medium hover:bg-ink-700 transition">Rejoindre le mouvement →</a>
+    </div>
+    <div class="reveal lg:col-span-3">
+      <div class="video-frame aspect-video">
+        <video autoplay muted loop playsinline preload="metadata">
+          <source src="media/tower.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
   </div>
 </section>
 
