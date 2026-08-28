@@ -394,7 +394,7 @@
       body:'Travaux de raccordement de la future ligne T9 : impacts et solutions de substitution à anticiper pour vos déplacements.' }
   ];
 
-  document.getElementById('actus-grid').innerHTML = actus.map(a => `
+  function renderActus(list){ document.getElementById('actus-grid').innerHTML = list.map(a => `
     <article class="reveal news bg-paper-50 rounded-2xl p-5 sm:p-6 shadow-card flex flex-col">
       <div class="flex items-center justify-between gap-2">
         <span class="tag" style="${TAGCOL[a.tag]||TAGCOL['Info']}">${a.tag}</span>
@@ -403,7 +403,8 @@
       <h3 class="display mt-3 text-lg font-semibold leading-snug">${a.title}</h3>
       <p class="mt-2 text-sm text-ink-500 grow">${a.body}</p>
     </article>
-  `).join('');
+  `).join(''); }
+  renderActus(actus);
 
   // ============================================================
   // PROCHAINS RENDEZ-VOUS
@@ -415,7 +416,7 @@
     { date:'15 oct. 2026', title:'Conférence « Nouveaux usages & modes de travail »', loc:'12h–14h · Auditorium Silex² · Kardham & Egis', tag:'Conférence' },
     { date:'3 nov. 2026', title:'Soirée Interclubs de Lyon', loc:'En préparation avec les clubs partenaires', tag:'Événement' }
   ];
-  document.getElementById('agenda-grid').innerHTML = agenda.map(e => `
+  function renderAgenda(list){ document.getElementById('agenda-grid').innerHTML = list.map(e => `
     <li class="reveal rounded-2xl bg-paper-50 p-5 shadow-ring hover:shadow-card transition">
       <div class="flex items-baseline justify-between gap-2">
         <span class="display text-base sm:text-lg font-semibold">${e.date}</span>
@@ -424,7 +425,8 @@
       <h3 class="mt-1 font-semibold text-ink-900 text-sm">${e.title}</h3>
       ${e.loc ? `<p class="text-xs text-ink-500 mt-0.5">${e.loc}</p>`:''}
     </li>
-  `).join('');
+  `).join(''); }
+  renderAgenda(agenda);
 
   // ============================================================
   // NOUVEAUX ADHÉRENTS 2026
@@ -435,13 +437,35 @@
     { n:'ACCOR PART-DIEU', d:'Ibis Budget · Ibis Styles · Mercure' },
     { n:'LES ATELIERS DE L’AUDACE', d:'Nouvel adhérent 2026' }
   ];
-  document.getElementById('nouveaux-grid').innerHTML = nouveaux.map(m => `
+  function renderNouveaux(list){ document.getElementById('nouveaux-grid').innerHTML = list.map(m => `
     <div class="reveal rounded-2xl bg-paper-50 p-5 shadow-card border-t-4 border-brand-500">
       <div class="w-9 h-9 rounded-lg bg-brand-100 grid place-items-center text-brand-700 font-bold text-xs">✓</div>
       <h3 class="display mt-3 text-base font-semibold leading-tight">${m.n}</h3>
       <p class="mt-1 text-xs text-ink-500">${m.d}</p>
     </div>
-  `).join('');
+  `).join(''); }
+  renderNouveaux(nouveaux);
+
+  // ============================================================
+  // FLUX LIVE — éléments votés par les adhérents et validés par le bureau
+  // dans l'espace de vote (celpd-vote-v2.vercel.app). En cas d'échec réseau,
+  // la page garde son contenu statique ci-dessus.
+  // ============================================================
+  const VOTE_API = 'https://celpd-vote-v2.vercel.app/api/public/site';
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  fetch(VOTE_API).then(r => r.ok ? r.json() : null).then(live => {
+    if (!live) return;
+    const liveActus = (live.actus || []).map(a => ({ tag: esc(a.tag), date: esc(a.date), title: esc(a.title), body: esc(a.body) }));
+    const liveAgenda = (live.agenda || []).map(e => ({ date: esc(e.date), title: esc(e.title), loc: esc(e.loc), tag: esc(e.tag) }));
+    const liveNouveaux = (live.nouveaux || [])
+      .filter(m => !nouveaux.some(x => x.n.toLowerCase() === String(m.n || '').toLowerCase()))
+      .map(m => ({ n: esc(m.n), d: esc(m.d) }));
+    if (liveActus.length) renderActus([...liveActus, ...actus]);
+    if (liveAgenda.length) renderAgenda([...liveAgenda, ...agenda]);
+    if (liveNouveaux.length) renderNouveaux([...nouveaux, ...liveNouveaux]);
+    document.querySelectorAll('.reveal:not(.in)').forEach(el => io.observe(el));
+    sendHeight();
+  }).catch(() => {});
 
   // ============================================================
   // REVEAL + hauteur (embed Wix)
