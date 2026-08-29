@@ -397,7 +397,7 @@
   function renderActus(list){ document.getElementById('actus-grid').innerHTML = list.map(a => `
     <article class="reveal news bg-paper-50 rounded-2xl p-5 sm:p-6 shadow-card flex flex-col">
       <div class="flex items-center justify-between gap-2">
-        <span class="tag" style="${TAGCOL[a.tag]||TAGCOL['Info']}">${a.tag}</span>
+        <span class="tag" style="${Object.prototype.hasOwnProperty.call(TAGCOL, a.tag) ? TAGCOL[a.tag] : TAGCOL['Info']}">${a.tag}</span>
         <span class="news-date text-[11px] font-semibold text-ink-300">${a.date}</span>
       </div>
       <h3 class="display mt-3 text-lg font-semibold leading-snug">${a.title}</h3>
@@ -452,14 +452,19 @@
   // la page garde son contenu statique ci-dessus.
   // ============================================================
   const VOTE_API = 'https://celpd-vote-v2.vercel.app/api/public/site';
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  fetch(VOTE_API).then(r => r.ok ? r.json() : null).then(live => {
-    if (!live) return;
-    const liveActus = (live.actus || []).map(a => ({ tag: esc(a.tag), date: esc(a.date), title: esc(a.title), body: esc(a.body) }));
-    const liveAgenda = (live.agenda || []).map(e => ({ date: esc(e.date), title: esc(e.title), loc: esc(e.loc), tag: esc(e.tag) }));
-    const liveNouveaux = (live.nouveaux || [])
-      .filter(m => !nouveaux.some(x => x.n.toLowerCase() === String(m.n || '').toLowerCase()))
-      .map(m => ({ n: esc(m.n), d: esc(m.d) }));
+  // Tout champ venant de l'API est échappé ET borné en longueur : le flux alimente
+  // innerHTML, il est donc traité comme du texte non fiable, jamais comme du HTML.
+  const esc = (s, max = 300) => String(s ?? '').slice(0, max)
+    .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const MAX_LIVE = 12;
+  fetch(VOTE_API, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).then(live => {
+    if (!live || typeof live !== 'object') return;
+    const arr = x => Array.isArray(x) ? x.slice(0, MAX_LIVE) : [];
+    const liveActus = arr(live.actus).map(a => ({ tag: esc(a.tag, 30), date: esc(a.date, 30), title: esc(a.title, 180), body: esc(a.body, 2000) }));
+    const liveAgenda = arr(live.agenda).map(e => ({ date: esc(e.date, 30), title: esc(e.title, 180), loc: esc(e.loc, 300), tag: esc(e.tag, 30) }));
+    const liveNouveaux = arr(live.nouveaux)
+      .filter(m => !nouveaux.some(x => x.n.toLowerCase() === String(m.n ?? '').toLowerCase()))
+      .map(m => ({ n: esc(m.n, 120), d: esc(m.d, 200) }));
     if (liveActus.length) renderActus([...liveActus, ...actus]);
     if (liveAgenda.length) renderAgenda([...liveAgenda, ...agenda]);
     if (liveNouveaux.length) renderNouveaux([...nouveaux, ...liveNouveaux]);
